@@ -16,7 +16,6 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Check saved theme or system preference
     const savedTheme = localStorage.getItem('pmpingo_theme') as 'light' | 'dark' | null;
     const initialTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     setTheme(initialTheme);
@@ -63,15 +62,15 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
     <header className="swiss-header">
       <div className="swiss-container">
         <div className="header-inner">
-          {/* Brand */}
+          {/* Brand Mark */}
           <div className="brand-mark">
             <div className="brand-dot" aria-hidden="true" />
             <span className="brand-name">PMPingo</span>
             <span className="brand-sub">ECO 2026</span>
           </div>
 
-          {/* Nav Items */}
-          <nav className="nav-group">
+          {/* Nav Items - Desktop only */}
+          <nav className="desktop-nav">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -90,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
               <span className="metric-val">{stats.diagnosticCompleted ? '1' : '0'}/28</span>
             </div>
             <div className="metric-item">
-              <span>Streak</span>
+              <span>🔥</span>
               <span className="metric-val">{stats.streakDays}d</span>
             </div>
 
@@ -98,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
             <button
               onClick={toggleTheme}
               className="btn-swiss btn-swiss-secondary"
-              style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+              style={{ padding: '6px 10px', fontSize: '0.78rem', minHeight: '34px', width: 'auto' }}
               title={`Switch to ${theme === 'light' ? 'Dark' : 'Clear (Light)'} Mode`}
               aria-label="Toggle Theme"
             >
@@ -110,8 +109,8 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
             <button
               onClick={handleInstallClick}
               className="btn-swiss btn-swiss-secondary"
-              style={{ padding: '6px 10px', fontSize: '0.78rem' }}
-              title="Install progressive web app"
+              style={{ padding: '6px 10px', fontSize: '0.78rem', minHeight: '34px', width: 'auto' }}
+              title="Install progressive web app on smartphone"
             >
               {installed ? <Check size={14} /> : <Download size={14} />}
               <span>{installed ? 'Installed' : 'App'}</span>

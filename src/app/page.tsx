@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import { BottomNav } from '@/components/BottomNav';
 import { TodayView } from '@/components/TodayView';
 import { QuestionCard } from '@/components/QuestionCard';
 import { DebriefModal } from '@/components/DebriefModal';
@@ -21,13 +22,14 @@ import {
   INITIAL_USER_STATS,
 } from '@/lib/storage';
 import { Question, ConfidenceLevel, UserStats, SpacedRepetitionCard, MistakeCategory } from '@/types';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function PMPingoApp() {
   const [stats, setStats] = useState<UserStats>(INITIAL_USER_STATS);
   const [spacedCards, setSpacedCards] = useState<SpacedRepetitionCard[]>([]);
   const [currentTab, setCurrentTab] = useState<string>('today');
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Active Practice Queue
   const [activeQueue, setActiveQueue] = useState<Question[]>([]);
@@ -40,6 +42,7 @@ export default function PMPingoApp() {
   const [sessionScore, setSessionScore] = useState({ attempted: 0, correct: 0 });
 
   useEffect(() => {
+    setIsMounted(true);
     const loaded = getStoredStats();
     setStats(loaded);
     setSpacedCards(getSpacedRepetitionCards());
@@ -137,20 +140,24 @@ export default function PMPingoApp() {
       setIsExportOpen(true);
     } else {
       setCurrentTab(tabId);
+      // Scroll smoothly to top on tab change
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
   const currentQuestion = activeQueue[currentIndex];
 
   return (
-    <div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header
         stats={stats}
         currentTab={currentTab}
         onSelectTab={handleSelectTab}
       />
 
-      <div className="swiss-container">
+      <main className="swiss-container" style={{ flex: 1 }}>
         {/* TAB 1: TODAY (MISSION CONTROL) */}
         {currentTab === 'today' && (
           <TodayView
@@ -158,7 +165,7 @@ export default function PMPingoApp() {
             spacedCards={spacedCards}
             onStartToday={() => handleStartStudy(QUESTIONS_BANK.filter((q) => !q.isDiagnostic))}
             onStartDiagnostic={() => handleStartStudy(QUESTIONS_BANK.filter((q) => q.isDiagnostic))}
-            onOpenLearn={() => setCurrentTab('learn')}
+            onOpenLearn={() => handleSelectTab('learn')}
           />
         )}
 
@@ -213,7 +220,7 @@ export default function PMPingoApp() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                <div style={{ display: 'flex', gap: 'var(--space-3)', flexDirection: 'column' }}>
                   <button
                     onClick={() => handleStartStudy(QUESTIONS_BANK.filter((q) => !q.isDiagnostic))}
                     className="btn-swiss btn-swiss-primary"
@@ -222,7 +229,7 @@ export default function PMPingoApp() {
                     <ArrowRight size={16} />
                   </button>
                   <button
-                    onClick={() => setCurrentTab('today')}
+                    onClick={() => handleSelectTab('today')}
                     className="btn-swiss btn-swiss-secondary"
                   >
                     <span>Return to Mission Control</span>
@@ -256,7 +263,7 @@ export default function PMPingoApp() {
                   Select a day or topic from the curriculum to begin a focused assessment.
                 </p>
                 <button
-                  onClick={() => setCurrentTab('today')}
+                  onClick={() => handleSelectTab('today')}
                   className="btn-swiss btn-swiss-primary"
                 >
                   <span>Go to Mission Control</span>
@@ -275,10 +282,13 @@ export default function PMPingoApp() {
         {currentTab === 'progress' && (
           <ProgressView stats={stats} onLogStudyHall={handleStudyHallLogged} />
         )}
-      </div>
+      </main>
 
       {/* Export Pack Modal */}
       <ExportPackModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} />
+
+      {/* Mobile Bottom Navigation Dock (visible on <= 768px screens) */}
+      <BottomNav currentTab={currentTab} onSelectTab={handleSelectTab} />
     </div>
   );
 }
