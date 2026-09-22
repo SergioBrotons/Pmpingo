@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
-import { TodayView } from '@/components/TodayView';
 import { QuestionCard } from '@/components/QuestionCard';
 import { DebriefModal } from '@/components/DebriefModal';
 import { CurriculumView } from '@/components/CurriculumView';
@@ -22,17 +21,18 @@ import {
   INITIAL_USER_STATS,
 } from '@/lib/storage';
 import { Question, ConfidenceLevel, UserStats, SpacedRepetitionCard, MistakeCategory } from '@/types';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, RotateCcw, CheckCircle2, Play } from 'lucide-react';
 
 export default function PMPingoApp() {
   const [stats, setStats] = useState<UserStats>(INITIAL_USER_STATS);
   const [spacedCards, setSpacedCards] = useState<SpacedRepetitionCard[]>([]);
   const [currentTab, setCurrentTab] = useState<string>('today');
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
-  // Active Practice Queue
-  const [activeQueue, setActiveQueue] = useState<Question[]>([]);
+  // Active Questions Queue (default to diagnostic so questions are ALWAYS immediately visible on first paint)
+  const [activeQueue, setActiveQueue] = useState<Question[]>(() =>
+    QUESTIONS_BANK.filter((q) => q.isDiagnostic)
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [selectedConfidence, setSelectedConfidence] = useState<ConfidenceLevel>(3);
@@ -42,23 +42,19 @@ export default function PMPingoApp() {
   const [sessionScore, setSessionScore] = useState({ attempted: 0, correct: 0 });
 
   useEffect(() => {
-    setIsMounted(true);
     const loaded = getStoredStats();
     setStats(loaded);
     setSpacedCards(getSpacedRepetitionCards());
-
-    const diagnostics = QUESTIONS_BANK.filter((q) => q.isDiagnostic);
-    setActiveQueue(diagnostics);
   }, []);
 
   const handleStartStudy = (questions: Question[]) => {
-    setActiveQueue(questions);
+    setActiveQueue(questions.length > 0 ? questions : QUESTIONS_BANK);
     setCurrentIndex(0);
     setIsAnswerSubmitted(false);
     setSelectedAnswer(null);
     setSessionCompleted(false);
     setSessionScore({ attempted: 0, correct: 0 });
-    setCurrentTab('practice');
+    setCurrentTab('today');
   };
 
   const handleStartDayCurriculum = (dayNumber: number) => {
@@ -118,6 +114,10 @@ export default function PMPingoApp() {
       setCurrentIndex((prev) => prev + 1);
       setIsAnswerSubmitted(false);
       setSelectedAnswer(null);
+      // Smooth scroll to top of question on mobile
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } else {
       setSessionCompleted(true);
       if (activeQueue.some((q) => q.isDiagnostic)) {
@@ -140,14 +140,13 @@ export default function PMPingoApp() {
       setIsExportOpen(true);
     } else {
       setCurrentTab(tabId);
-      // Scroll smoothly to top on tab change
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   };
 
-  const currentQuestion = activeQueue[currentIndex];
+  const currentQuestion = activeQueue[currentIndex] || activeQueue[0];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -157,25 +156,9 @@ export default function PMPingoApp() {
         onSelectTab={handleSelectTab}
       />
 
-      <main className="swiss-container" style={{ flex: 1 }}>
-        {/* TAB 1: TODAY (MISSION CONTROL) */}
+      <main className="swiss-container" style={{ flex: 1, width: '100%' }}>
+        {/* TAB 1: TODAY (ACTIVE QUESTION & ASSESSMENT ENGINE) */}
         {currentTab === 'today' && (
-          <TodayView
-            stats={stats}
-            spacedCards={spacedCards}
-            onStartToday={() => handleStartStudy(QUESTIONS_BANK.filter((q) => !q.isDiagnostic))}
-            onStartDiagnostic={() => handleStartStudy(QUESTIONS_BANK.filter((q) => q.isDiagnostic))}
-            onOpenLearn={() => handleSelectTab('learn')}
-          />
-        )}
-
-        {/* TAB 2: LEARN (28-DAY CURRICULUM) */}
-        {currentTab === 'learn' && (
-          <CurriculumView onStartDay={handleStartDayCurriculum} />
-        )}
-
-        {/* TAB 3: PRACTICE (ASSESSMENT QUESTION ENGINE) */}
-        {currentTab === 'practice' && (
           <div style={{ marginTop: 'var(--space-6)', marginBottom: 'var(--space-12)' }}>
             {sessionCompleted ? (
               <div className="panel" style={{ padding: 'var(--space-8)' }}>
@@ -225,19 +208,49 @@ export default function PMPingoApp() {
                     onClick={() => handleStartStudy(QUESTIONS_BANK.filter((q) => !q.isDiagnostic))}
                     className="btn-swiss btn-swiss-primary"
                   >
-                    <span>Proceed to Next Scenario</span>
+                    <span>Proceed to Next Challenge</span>
                     <ArrowRight size={16} />
                   </button>
                   <button
-                    onClick={() => handleSelectTab('today')}
+                    onClick={() => handleSelectTab('learn')}
                     className="btn-swiss btn-swiss-secondary"
                   >
-                    <span>Return to Mission Control</span>
+                    <span>View 28-Day Plan</span>
                   </button>
                 </div>
               </div>
             ) : currentQuestion ? (
               <div>
+                {/* Active Session Mission Strip */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: 'var(--space-3) var(--space-4)',
+                    backgroundColor: 'var(--bg-subtle)',
+                    border: '1px solid var(--border-hairline)',
+                    borderRadius: 'var(--radius-xs)',
+                    marginBottom: 'var(--space-4)',
+                    flexWrap: 'wrap',
+                    gap: 'var(--space-2)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <span className="label-meta" style={{ color: 'var(--signal-swiss-red)' }}>
+                      {stats.diagnosticCompleted ? 'Day 01 Session' : 'Diagnostic Calibration'}
+                    </span>
+                    <span style={{ color: 'var(--border-hairline)' }}>•</span>
+                    <span className="label-meta" style={{ color: 'var(--text-main)', textTransform: 'none' }}>
+                      {currentQuestion.ecoTask}
+                    </span>
+                  </div>
+                  <span className="label-meta" style={{ fontFeatureSettings: '"tnum"' }}>
+                    Progress: {currentIndex + 1} / {activeQueue.length}
+                  </span>
+                </div>
+
+                {/* THE QUESTION CARD - ALWAYS VISIBLE */}
                 <QuestionCard
                   question={currentQuestion}
                   questionIndex={currentIndex}
@@ -245,6 +258,7 @@ export default function PMPingoApp() {
                   onSubmitAnswer={handleSubmitAnswer}
                 />
 
+                {/* THE DEBRIEF PANEL - EXPANDS UNDERNEATH UPON SUBMISSION */}
                 {isAnswerSubmitted && selectedAnswer && (
                   <DebriefModal
                     question={currentQuestion}
@@ -256,29 +270,21 @@ export default function PMPingoApp() {
                   />
                 )}
               </div>
-            ) : (
-              <div className="panel" style={{ padding: 'var(--space-8)' }}>
-                <h3>No active practice queue</h3>
-                <p className="text-secondary" style={{ marginTop: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-                  Select a day or topic from the curriculum to begin a focused assessment.
-                </p>
-                <button
-                  onClick={() => handleSelectTab('today')}
-                  className="btn-swiss btn-swiss-primary"
-                >
-                  <span>Go to Mission Control</span>
-                </button>
-              </div>
-            )}
+            ) : null}
           </div>
         )}
 
-        {/* TAB 4: MISTAKES (PERFORMANCE REVIEW) */}
+        {/* TAB 2: LEARN (28-DAY CURRICULUM ROADMAP) */}
+        {currentTab === 'learn' && (
+          <CurriculumView onStartDay={handleStartDayCurriculum} />
+        )}
+
+        {/* TAB 3: MISTAKES (PERFORMANCE REVIEW) */}
         {currentTab === 'mistakes' && (
           <MistakeLabView onPracticeWeakSpots={handlePracticeWeakSpots} />
         )}
 
-        {/* TAB 5: PROGRESS (ANALYTICAL OVERVIEW & STUDY HALL) */}
+        {/* TAB 4: PROGRESS (ANALYTICAL OVERVIEW & STUDY HALL) */}
         {currentTab === 'progress' && (
           <ProgressView stats={stats} onLogStudyHall={handleStudyHallLogged} />
         )}
@@ -287,7 +293,7 @@ export default function PMPingoApp() {
       {/* Export Pack Modal */}
       <ExportPackModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} />
 
-      {/* Mobile Bottom Navigation Dock (visible on <= 768px screens) */}
+      {/* Mobile Bottom Navigation Dock */}
       <BottomNav currentTab={currentTab} onSelectTab={handleSelectTab} />
     </div>
   );
