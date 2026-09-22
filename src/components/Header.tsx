@@ -53,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ stats, currentTab, onSelectTab }
     { id: 'today', label: 'Today' },
     { id: 'learn', label: 'Learn' },
     { id: 'practice', label: 'Practice' },
+    { id: 'leaderboard', label: 'Leaderboard' },
     { id: 'mistakes', label: 'Mistakes' },
     { id: 'progress', label: 'Progress' },
     { id: 'export', label: 'Export' },

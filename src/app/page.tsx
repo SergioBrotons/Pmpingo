@@ -9,6 +9,7 @@ import { DebriefModal } from '@/components/DebriefModal';
 import { CurriculumView } from '@/components/CurriculumView';
 import { MistakeLabView } from '@/components/MistakeLabView';
 import { ProgressView } from '@/components/ProgressView';
+import { LeaderboardView } from '@/components/LeaderboardView';
 import { ExportPackModal } from '@/components/ExportPackModal';
 import { QUESTIONS_BANK } from '@/data/questions';
 import { CURRICULUM_DAYS } from '@/data/curriculum';
@@ -293,7 +294,12 @@ export default function PMPingoApp() {
           </div>
         )}
 
-        {/* TAB 4: MISTAKES (PERFORMANCE REVIEW) */}
+        {/* TAB 4: LEADERBOARD (COLLEAGUE RANKING & SOCIAL STUDY GRAPH) */}
+        {currentTab === 'leaderboard' && (
+          <LeaderboardView stats={stats} />
+        )}
+
+        {/* TAB 5: MISTAKES (PERFORMANCE REVIEW) */}
         {currentTab === 'mistakes' && (
           <MistakeLabView onPracticeWeakSpots={handlePracticeWeakSpots} />
         )}

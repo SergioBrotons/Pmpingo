@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, BookOpen, BrainCircuit, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Home, BookOpen, BrainCircuit, Trophy, AlertTriangle } from 'lucide-react';
 
 interface BottomNavProps {
   currentTab: string;
@@ -11,10 +11,10 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab }) => {
   const tabs = [
     { id: 'today', label: 'Today', icon: Home },
-    { id: 'learn', label: 'Learn', icon: BookOpen },
     { id: 'practice', label: 'Practice', icon: BrainCircuit },
+    { id: 'leaderboard', label: 'Ranking', icon: Trophy },
+    { id: 'learn', label: '28 Days', icon: BookOpen },
     { id: 'mistakes', label: 'Mistakes', icon: AlertTriangle },
-    { id: 'progress', label: 'Progress', icon: BarChart3 },
   ];
 
   return (
@@ -29,7 +29,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab })
             className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             aria-label={tab.label}
           >
-            <Icon size={20} strokeWidth={isActive ? 2.2 : 1.7} />
+            <Icon size={19} strokeWidth={isActive ? 2.2 : 1.7} />
             <span>{tab.label}</span>
           </button>
         );
