@@ -41,10 +41,25 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for (let registration of registrations) {
+                    registration.update();
+                  }
+                });
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(reg) { console.log('PMPingo SW registered: ', reg.scope); },
-                    function(err) { console.log('PMPingo SW registration failed: ', err); }
+                  navigator.serviceWorker.register('/sw.js?v=2').then(
+                    function(reg) {
+                      reg.onupdatefound = function() {
+                        var installingWorker = reg.installing;
+                        installingWorker.onstatechange = function() {
+                          if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                              window.location.reload();
+                            }
+                          }
+                        };
+                      };
+                    }
                   );
                 });
               }
