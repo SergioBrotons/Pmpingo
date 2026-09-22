@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="pmpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DA291C" />
+      <stop offset="50%" stop-color="#003399" />
+      <stop offset="100%" stop-color="#005C29" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="#0F172A"/>
+  <circle cx="256" cy="256" r="190" fill="url(#pmpGrad)" opacity="0.15" />
+  <!-- Hexagon / Badge shield -->
+  <path d="M 256 80 L 390 145 L 390 310 L 256 420 L 122 310 L 122 145 Z" fill="#1E293B" stroke="#DA291C" stroke-width="8" filter="url(#shadow)" />
+  <!-- Center PMP Flame / Target -->
+  <circle cx="256" cy="245" r="75" fill="#0F172A" stroke="#D4AF37" stroke-width="6"/>
+  <!-- Checkmark -->
+  <path d="M 215 245 L 245 275 L 305 210" fill="none" stroke="#22C55E" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Star at top -->
+  <polygon points="256,120 263,138 283,138 267,150 273,168 256,156 239,168 245,150 229,138 249,138" fill="#D4AF37" />
+</svg>
