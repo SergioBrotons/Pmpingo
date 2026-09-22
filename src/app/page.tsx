@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
+import { TodayView } from '@/components/TodayView';
 import { QuestionCard } from '@/components/QuestionCard';
 import { DebriefModal } from '@/components/DebriefModal';
 import { CurriculumView } from '@/components/CurriculumView';
@@ -21,15 +22,15 @@ import {
   INITIAL_USER_STATS,
 } from '@/lib/storage';
 import { Question, ConfidenceLevel, UserStats, SpacedRepetitionCard, MistakeCategory } from '@/types';
-import { ArrowRight, RotateCcw, CheckCircle2, Play } from 'lucide-react';
+import { ArrowRight, RotateCcw, Play } from 'lucide-react';
 
 export default function PMPingoApp() {
   const [stats, setStats] = useState<UserStats>(INITIAL_USER_STATS);
   const [spacedCards, setSpacedCards] = useState<SpacedRepetitionCard[]>([]);
-  const [currentTab, setCurrentTab] = useState<string>('today');
+  const [currentTab, setCurrentTab] = useState<string>('practice');
   const [isExportOpen, setIsExportOpen] = useState(false);
 
-  // Active Questions Queue (default to diagnostic so questions are ALWAYS immediately visible on first paint)
+  // Active Questions Queue (default to diagnostic so questions are ALWAYS immediately ready)
   const [activeQueue, setActiveQueue] = useState<Question[]>(() =>
     QUESTIONS_BANK.filter((q) => q.isDiagnostic)
   );
@@ -54,7 +55,10 @@ export default function PMPingoApp() {
     setSelectedAnswer(null);
     setSessionCompleted(false);
     setSessionScore({ attempted: 0, correct: 0 });
-    setCurrentTab('today');
+    setCurrentTab('practice');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleStartDayCurriculum = (dayNumber: number) => {
@@ -114,7 +118,6 @@ export default function PMPingoApp() {
       setCurrentIndex((prev) => prev + 1);
       setIsAnswerSubmitted(false);
       setSelectedAnswer(null);
-      // Smooth scroll to top of question on mobile
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -157,8 +160,24 @@ export default function PMPingoApp() {
       />
 
       <main className="swiss-container" style={{ flex: 1, width: '100%' }}>
-        {/* TAB 1: TODAY (ACTIVE QUESTION & ASSESSMENT ENGINE) */}
+        {/* TAB 1: TODAY (MISSION CONTROL) */}
         {currentTab === 'today' && (
+          <TodayView
+            stats={stats}
+            spacedCards={spacedCards}
+            onStartToday={() => handleStartStudy(QUESTIONS_BANK.filter((q) => !q.isDiagnostic))}
+            onStartDiagnostic={() => handleStartStudy(QUESTIONS_BANK.filter((q) => q.isDiagnostic))}
+            onOpenLearn={() => handleSelectTab('learn')}
+          />
+        )}
+
+        {/* TAB 2: LEARN (28-DAY CURRICULUM ROADMAP) */}
+        {currentTab === 'learn' && (
+          <CurriculumView onStartDay={handleStartDayCurriculum} />
+        )}
+
+        {/* TAB 3: PRACTICE (ACTIVE QUESTION & ASSESSMENT ENGINE) */}
+        {currentTab === 'practice' && (
           <div style={{ marginTop: 'var(--space-6)', marginBottom: 'var(--space-12)' }}>
             {sessionCompleted ? (
               <div className="panel" style={{ padding: 'var(--space-8)' }}>
@@ -246,11 +265,11 @@ export default function PMPingoApp() {
                     </span>
                   </div>
                   <span className="label-meta" style={{ fontFeatureSettings: '"tnum"' }}>
-                    Progress: {currentIndex + 1} / {activeQueue.length}
+                    Question {currentIndex + 1} of {activeQueue.length}
                   </span>
                 </div>
 
-                {/* THE QUESTION CARD - ALWAYS VISIBLE */}
+                {/* THE QUESTION CARD */}
                 <QuestionCard
                   question={currentQuestion}
                   questionIndex={currentIndex}
@@ -258,7 +277,7 @@ export default function PMPingoApp() {
                   onSubmitAnswer={handleSubmitAnswer}
                 />
 
-                {/* THE DEBRIEF PANEL - EXPANDS UNDERNEATH UPON SUBMISSION */}
+                {/* THE DEBRIEF PANEL */}
                 {isAnswerSubmitted && selectedAnswer && (
                   <DebriefModal
                     question={currentQuestion}
@@ -274,17 +293,12 @@ export default function PMPingoApp() {
           </div>
         )}
 
-        {/* TAB 2: LEARN (28-DAY CURRICULUM ROADMAP) */}
-        {currentTab === 'learn' && (
-          <CurriculumView onStartDay={handleStartDayCurriculum} />
-        )}
-
-        {/* TAB 3: MISTAKES (PERFORMANCE REVIEW) */}
+        {/* TAB 4: MISTAKES (PERFORMANCE REVIEW) */}
         {currentTab === 'mistakes' && (
           <MistakeLabView onPracticeWeakSpots={handlePracticeWeakSpots} />
         )}
 
-        {/* TAB 4: PROGRESS (ANALYTICAL OVERVIEW & STUDY HALL) */}
+        {/* TAB 5: PROGRESS (ANALYTICAL OVERVIEW & STUDY HALL) */}
         {currentTab === 'progress' && (
           <ProgressView stats={stats} onLogStudyHall={handleStudyHallLogged} />
         )}
